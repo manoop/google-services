@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sprint Timeline with Daily and Monthly Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .timeline-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+        .sprint-bar {
+            display: inline-block;
+            height: 50px;
+            vertical-align: top;
+            position: relative;
+            margin-right: 0px;
+            border: 1px solid black;
+            border-radius: 5px;
+        }
+        .sprint-label {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+        }
+        .date-label, .month-label {
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+            font-size: 10px;
+            transform: rotate(45deg);
+            transform-origin: left bottom;
+            margin: 0;
+        }
+        .weekend {
+            color: red;
+            font-weight: bold;
+        }
+        .month-transition {
+            background-color: #FFD700;
+        }
+        .date-container, .month-container {
+            margin-top: 5px;
+        }
+        .month-label {
+            transform: none;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .month-highlight {
+            display: inline-block;
+            height: 10px;
+        }
+        .input-container {
+            margin-top: 20px; /* Added space between timeline and input */
+        }
+    </style>
+</head>
+<body>
+
+<div class="timeline-container">
+    <div id="sprint-timeline"></div>
+    <div class="date-container" id="date-calendar"></div>
+    <div class="month-container" id="month-calendar"></div>
+    <div class="month-container" id="month-highlight"></div>
+    <div class="input-container">
+        <label for="start-date">Enter Start Date (YYYY-MM-DD): </label>
+        <input type="text" id="start-date" placeholder="2025-02-03">
+        <button onclick="updateTimeline()">Update Timeline</button>
+    </div>
+</div>
+
+<script>
+    const sprintColors = ["#4CAF50", "#FF9800", "#2196F3", "#9C27B0", "#E91E63", "#FFC107", "#03A9F4", "#8BC34A", "#FF5722", "#00BCD4", "#673AB7", "#CDDC39", "#F44336", "#009688", "#795548"];
+    const monthColors = ["#FFCCCC", "#CCFFCC", "#CCCCFF", "#FFFFCC", "#FFCCFF", "#CCFFFF", "#FFD700", "#FFB6C1", "#98FB98", "#87CEFA", "#DDA0DD", "#F08080"];
+
+    const sprints = [
+        { name: "Sprint 1", start: "2025-02-03", end: "2025-02-23", link: "#" },
+        { name: "Sprint 2", start: "2025-02-24", end: "2025-03-16", link: "#" },
+        { name: "Sprint 3", start: "2025-03-17", end: "2025-04-06", link: "#" },
+        { name: "Sprint 4", start: "2025-04-07", end: "2025-04-27", link: "#" },
+        { name: "Sprint 5", start: "2025-04-28", end: "2025-05-18", link: "#" },
+        { name: "Sprint 6", start: "2025-05-19", end: "2025-06-08", link: "#" },
+        { name: "Sprint 7", start: "2025-06-09", end: "2025-06-29", link: "#" },
+        { name: "Sprint 8", start: "2025-06-30", end: "2025-07-20", link: "#" },
+        { name: "Sprint 9", start: "2025-07-21", end: "2025-08-10", link: "#" },
+        { name: "Sprint 10", start: "2025-08-11", end: "2025-08-31", link: "#" },
+        { name: "Sprint 11", start: "2025-09-01", end: "2025-09-21", link: "#" },
+        { name: "Sprint 12", start: "2025-09-22", end: "2025-10-12", link: "#" },
+        { name: "Sprint 13", start: "2025-10-13", end: "2025-11-02", link: "#" },
+        { name: "Sprint 14", start: "2025-11-03", end: "2025-11-23", link: "#" },
+        { name: "Sprint 15", start: "2025-11-24", end: "2025-11-30", link: "#" }
+    ];
+
+    const sprintTimeline = document.getElementById('sprint-timeline');
+    const dateCalendar = document.getElementById('date-calendar');
+    const monthCalendar = document.getElementById('month-calendar');
+
+    const dayWidth = 21; // Consistent width per day
+
+    function updateTimeline() {
+        const newStartDate = document.getElementById('start-date').value;
+        if (newStartDate) {
+            sprints[0].start = newStartDate;
+            const date = new Date(newStartDate);
+            date.setDate(date.getDate() + 18);
+            sprints[0].end = date.toISOString().split('T')[0];
+
+            sprintTimeline.innerHTML = '';
+            dateCalendar.innerHTML = '';
+            monthCalendar.innerHTML = '';
+            generateTimeline();
+        }
+    }
+
+    function generateTimeline() {
+        const startDate = new Date(sprints[0].start);
+        const endDate = new Date(sprints[sprints.length - 1].end);
+        const totalDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+        // Generate Sprint Timeline
+        sprints.forEach((sprint, index) => {
+            const sprintBar = document.createElement('a');
+            sprintBar.href = sprint.link;
+            sprintBar.target = "_blank";
+            sprintBar.className = 'sprint-bar';
+            sprintBar.style.backgroundColor = sprintColors[index % sprintColors.length];
+
+            const sprintStart = new Date(sprint.start);
+            const sprintEnd = new Date(sprint.end);
+            const sprintDuration = Math.floor((sprintEnd - sprintStart) / (1000 * 60 * 60 * 24)) + 1;
+            sprintBar.style.width = `${sprintDuration * dayWidth}px`;
+
+            const label = document.createElement('div');
+            label.className = 'sprint-label';
+            label.textContent = sprint.name;
+
+            sprintBar.appendChild(label);
+            sprintTimeline.appendChild(sprintBar);
+        });
+
+        // Generate Date Calendar
+        for (let i = 0; i < totalDays; i++) {
+            const currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + i);
+
+            const dateLabel = document.createElement('div');
+            dateLabel.className = 'date-label';
+            dateLabel.textContent = currentDate.toISOString().split('T')[0].slice(8, 10);
+            dateLabel.style.width = `${dayWidth}px`;
+
+            if (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+                dateLabel.classList.add('weekend');
+            }
+
+            dateCalendar.appendChild(dateLabel);
+        }
+
+        // Generate Month Calendar
+        let currentMonth = startDate.getMonth();
+        let monthStart = startDate;
+
+        for (let i = 0; i <= totalDays; i++) {
+            const currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + i);
+
+            if (currentDate.getMonth() !== currentMonth || i === totalDays) {
+                const monthLabel = document.createElement('div');
+                monthLabel.className = 'month-label';
+                monthLabel.style.backgroundColor = monthColors[currentMonth % monthColors.length];
+                const monthDuration = Math.floor((currentDate - monthStart) / (1000 * 60 * 60 * 24));
+                monthLabel.style.width = `${monthDuration * dayWidth}px`;
+                monthLabel.textContent = new Date(monthStart).toLocaleString('default', { month: 'short' });
+
+                monthCalendar.appendChild(monthLabel);
+
+                currentMonth = currentDate.getMonth();
+                monthStart = currentDate;
+            }
+        }
+    }
+
+    generateTimeline();
+</script>
+
+</body>
+</html>
